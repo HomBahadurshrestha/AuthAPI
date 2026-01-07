@@ -1,6 +1,11 @@
 using AuthAPI.Services;
+using AuthAPI.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace AuthAPI
+
 {
     public class Program
     {
@@ -17,7 +22,22 @@ namespace AuthAPI
             builder.Services.AddSwaggerGen();             // Adds Swagger generator
 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:key"]))
+                };
+            });
             
             var app = builder.Build();
 
@@ -33,6 +53,8 @@ namespace AuthAPI
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.Run();
         }

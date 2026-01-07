@@ -1,5 +1,6 @@
 ﻿using AuthAPI.Models;
 using AuthAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthAPI.Controllers
@@ -17,22 +18,48 @@ namespace AuthAPI.Controllers
         {
             _authService = authService;
         }
-
-        // Defines an HTTP POST endpoint.
-        [HttpPost("signup")]
-        public IActionResult Signup(RegisterRequest request)
+        // Register
+        [HttpPost("register")]
+        public IActionResult Register(RegisterRequest request)
         {
             _authService.Register(request);
             return Ok("User registered successfully");
         }
-        // Defines another HTTP POST endpoint
+
+        // Login -> JWT TOKEN
         [HttpPost("login")]
-        public IActionResult Login(LoginRequest request)
+        public IActionResult Login([FromBody] LoginRequest request)
         {
-            if (!_authService.Login(request))
+            var response = _authService.Login(request);
+
+            if (response == null)
                 return Unauthorized("Invalid credentials");
 
-            return Ok("Login successful");
+            return Ok(response);
         }
+
+        // Secure API
+        [Authorize]
+        [HttpGet("secure")]
+        public IActionResult Secure()
+        {
+            return Ok("You accessed a protected API");
+        }
+
+
+        [HttpPost("refresh")]
+        public IActionResult Refresh([FromBody] RefreshTokenRequest request)
+        {
+            var newAccessToken = _authService.RefreshAccessToken(request.RefreshToken);
+
+            if (newAccessToken == null)
+                return Unauthorized("Invalid refresh token");
+
+            return Ok(new { AccessToken = newAccessToken });
+        }
+
+
+
     }
 }
+        

@@ -9,9 +9,15 @@ namespace AuthAPI.Services
         // Declares a method named Register.
         // RegisterRequest request takes user registration data[FullName, Email, Password]
         void Register(RegisterRequest request);
+
+        AuthResponse Login(LoginRequest request);
+
+        //string Login(String username, string password);
+        string RefreshAccessToken(string refreshToken);
         
         // Declares a method named Login.
         // LoginRequest request takes login credentials(Email,Password)
-        bool Login(LoginRequest request);
+        
+        //bool Login(LoginRequest request);
     }
 }
